@@ -51,6 +51,16 @@
     if (nearestControl && !nearestControl.closest('#heroSticker')) return nearestControl;
     const nearest = node.closest(selector);
     if (!nearest || ['HTML', 'BODY', 'MAIN'].includes(nearest.tagName)) return null;
+    // A long touch on the empty page must never peel a full-width layout
+    // container. That used to leave a cream strip on the right and shift the
+    // document after someone merely tried to scroll. Actual content remains
+    // individually peelable; the whole working editor is handled above.
+    if (event.pointerType === 'touch' && nearest.matches(
+      'section,header,footer,nav,ul,ol,.hero-main,.hero-visual,.hero-text,.hero-social-line,' +
+      '.hero-cta-group,.ticker,.ticker-track,.about-grid,.about-copy,.benefits-top,' +
+      '.constructor-heading,.constructor-title-row,.builder-preview-area,' +
+      '.builder-controls,.footer-middle,.footer-bottom,.site-header'
+    )) return null;
     // Select a whole visible chip/label rather than an empty icon or text fragment.
     if (nearest.tagName === 'SPAN' && nearest.closest('h1,h2,h3,h4,h5,h6,p,button,a,figure')) {
       return nearest.closest('h1,h2,h3,h4,h5,h6,p,button,a,figure');
@@ -173,6 +183,16 @@
     return p;
   }
 
+  // Detached elements are absolute in document coordinates, but must not
+  // expand the mobile page or force horizontal scrolling while dragging.
+  function safePageLeft(desired, width) {
+    const viewport = document.documentElement.clientWidth;
+    if (viewport > 850) return desired;
+    if (width >= viewport - 12) return window.scrollX;
+    return clamp(desired, window.scrollX + 6,
+      window.scrollX + Math.max(6, viewport - width - 6));
+  }
+
   function detach(item, event) {
     if (item.detached) return;
     const node=item.node;
@@ -187,7 +207,7 @@
     const bounds=item.rect;
     document.body.append(node);
     node.style.setProperty('position','absolute','important');
-    node.style.setProperty('left',(event.pageX-item.grabX)+'px','important');
+    node.style.setProperty('left',safePageLeft(event.pageX-item.grabX,bounds.width)+'px','important');
     node.style.setProperty('top',(event.pageY-item.grabY)+'px','important');
     node.style.setProperty('width',bounds.width+'px','important');
     node.style.setProperty('height',bounds.height+'px','important');
@@ -204,7 +224,7 @@
 
   function moveFloating(item, event) {
     const node=item.node;
-    node.style.left=(event.pageX-item.grabX)+'px';
+    node.style.left=safePageLeft(event.pageX-item.grabX,item.rect.width)+'px';
     node.style.top=(event.pageY-item.grabY)+'px';
     const tilt=clamp((event.clientX-item.startX)*.023,-9,9);
     node.style.setProperty('--stikap-tilt',tilt+'deg');
@@ -254,6 +274,8 @@
     }
     moved.clear();
     resetInProgress=false;
+    // Also recover from any old browser viewport offset without jumping vertically.
+    if (window.scrollX) window.scrollTo({left:0,top:window.scrollY,behavior:'instant'});
     // The logo's original engine also listens to this one button and restores it.
     queueMicrotask(refreshReset);
   }

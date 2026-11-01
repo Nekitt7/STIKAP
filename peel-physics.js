@@ -191,6 +191,15 @@
     sticker.style.removeProperty('--bend-x');
     sticker.style.removeProperty('--bend-y');
   }
+  function safeHeroLeft(left, width) {
+    const viewport=document.documentElement.clientWidth;
+    if (viewport>850) return left;
+    // Keep room for the 9° rotation: its corners extend beyond layout width.
+    const spare=viewport-width;
+    if (spare<=32) return window.scrollX+Math.max(0,spare/2);
+    return clamp(left,window.scrollX+16,
+      window.scrollX+spare-16);
+  }
   function scrollAlongEdge() {
     if (!drag || !drag.detached) {scrollFrame=0;return;}
     const y=drag.clientY, edge=70;
@@ -210,9 +219,9 @@
     stopPeel();
     sticker.dataset.adhesion='free';
     sticker.style.position='absolute';
-    sticker.style.left=(cx-(drag?.grabX??ww*.5)+scrollX)+'px';
+    sticker.style.left=safeHeroLeft(cx-(drag?.grabX??ww*.5)+scrollX,ww)+'px';
     sticker.style.top=(cy-(drag?.grabY??hh*.5)+scrollY)+'px';
-    sticker.style.width=ww+'px';sticker.style.height=hh+'px';
+    sticker.style.setProperty('width',ww+'px','important');sticker.style.height=hh+'px';
     sticker.style.maxWidth='none';sticker.style.margin='0';
     sticker.style.zIndex='180';
     // Move into the body WITHOUT changing its visible screen coordinates.
@@ -285,7 +294,7 @@
     }
     drag.hasMoved=true;
     // Measuring grab position relative to the layout avoids page jumps on attachment.
-    sticker.style.left=(event.pageX-drag.grabX)+'px';
+    sticker.style.left=safeHeroLeft(event.pageX-drag.grabX,sticker.offsetWidth)+'px';
     sticker.style.top=(event.pageY-drag.grabY)+'px';
     sticker.style.setProperty('--sticker-rotate',clamp(dx*.027-9,-20,19)+'deg');
     sticker.style.setProperty('--sticker-lean',clamp(dy*.028,-9,9)+'deg');

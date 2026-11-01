@@ -223,3 +223,30 @@
 #builder.stikap-detached .preview-stage{touch-action:auto}
 @media(max-width:550px){.stikap-global-reset:not([hidden]){left:13px!important;bottom:15px!important;padding:11px 13px!important;font-size:9px!important}}
 @media(prefers-reduced-motion:reduce){.stikap-detached.stikap-resticking{animation:none!important}.stikap-peel-ghost.is-releasing *{transition:none!important}}
+
+
+/* STIKAP V8 — keep the mobile viewport anchored while stickers are moved.
+   overflow-x:clip prevents detached document-positioned nodes from enlarging
+   the horizontal scrolling area; unlike hidden it does not create a scroll box. */
+html, body {width:100%; max-width:100%; overflow-x:clip; overscroll-behavior-x:none;}
+main, .hero, .section-pad, .constructor, .builder {max-width:100%; min-width:0;}
+.hero-main, .hero-text, .hero-visual {min-width:0;}
+.hero-text>p, .constructor-title-row p {overflow-wrap:break-word;}
+.stikap-global-reset:not([hidden]) {max-width:calc(100dvw - 26px);}
+@media(max-width:550px) {
+  .hero h1 {max-width:100%;white-space:normal;font-size:clamp(33px,11.3vw,56px);letter-spacing:-.075em;}
+  .hero-cta-group {min-width:0;gap:12px;}
+  .hero-cta-group .btn {flex:0 1 auto;min-width:0;}
+  .hero-social-line {max-width:100%;white-space:normal;}
+  .hero-visual {max-width:100%;}
+  .sticker-home {left:0;width:100%;}
+  .stikap-global-reset:not([hidden]) {white-space:normal!important;text-align:center;}
+}
+@media(max-width:360px) {
+  .hero {padding-inline:17px;}
+  .hero h1 {font-size:clamp(32px,10.8vw,40px);}
+  .hero-cta-group {flex-wrap:wrap;}
+  .hero-cta-group .btn {flex:1 1 auto;}
+  .hero-social-line {gap:8px;}
+  .header-wordmark {min-width:0;}
+}
